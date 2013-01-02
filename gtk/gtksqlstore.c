@@ -243,7 +243,6 @@ GtkSqlStore *gtk_sql_store_newv(sqlite3 *db,
 	sub_types[0] = G_TYPE_INT64;
 	memcpy(sub_types + 1, types, n_columns * sizeof(GType));
 
-	// XXX: connect signals
 	priv->store = gtk_list_store_newv(1 + n_columns, sub_types);
 	priv->db = db;
 	priv->should_close_db = FALSE;
@@ -315,7 +314,6 @@ GtkSqlStore *gtk_sql_store_new_with_filev(const gchar *filename,
 	sub_types[0] = G_TYPE_INT64;
 	memcpy(sub_types + 1, types, n_columns * sizeof(GType));
 
-	// XXX: connect signals
 	priv->store = gtk_list_store_newv(1 + n_columns, sub_types);
 	priv->db = db;
 	priv->should_close_db = TRUE;
@@ -531,6 +529,12 @@ void gtk_sql_store_set_valuesv(GtkSqlStore *sql_store,
 
 	g_string_free(sql, TRUE);
 	sqlite3_finalize(stmt);
+
+	{
+		GtkTreePath *path = gtk_tree_model_get_path((GtkTreeModel *)priv->store, iter);
+		gtk_tree_model_row_changed((GtkTreeModel *)sql_store, path, iter);
+		gtk_tree_path_free(path);
+	}
 }
 
 void gtk_sql_store_remove(GtkSqlStore *sql_store,
@@ -561,6 +565,12 @@ void gtk_sql_store_remove(GtkSqlStore *sql_store,
 
 	sqlite3_finalize(stmt);
 	g_value_unset(&row_id);
+
+	{
+		GtkTreePath *path = gtk_tree_model_get_path((GtkTreeModel *)priv->store, iter);
+		gtk_tree_model_row_deleted((GtkTreeModel *)sql_store, path);
+		gtk_tree_path_free(path);
+	}
 }
 
 void gtk_sql_store_insert(GtkSqlStore *sql_store,
@@ -677,6 +687,12 @@ void gtk_sql_store_insert_with_valuesv(GtkSqlStore *sql_store,
 
 	g_string_free(sql, TRUE);
 	sqlite3_finalize(stmt);
+
+	{
+		GtkTreePath *path = gtk_tree_model_get_path((GtkTreeModel *)priv->store, iter);
+		gtk_tree_model_row_inserted((GtkTreeModel *)sql_store, path, iter);
+		gtk_tree_path_free(path);
+	}
 }
 
 void gtk_sql_store_clear(GtkSqlStore *sql_store)
